@@ -18,17 +18,25 @@ source("./Lake_DO/osat_fxn.R")
 ##==========================
 ## Read in DO data
 #===========================
+
+# Loads compiled Tahoe DO data with QAQC flags.
 ns_DO <- readRDS("./RawData/NS_miniDOT/flagged_all_100423.rds")
+
+# Examine file structure.
 str(ns_DO)
+
+# Add a column with the proper timezone attributed.
 ns_DO <- ns_DO %>% 
-  mutate(datetime = as.POSIXct(Pacific_Standard_Time, format ="%Y-%m-%d %H:%M:%S")) %>%
+  mutate(datetime = as.POSIXct(Pacific_Standard_Time, 
+                               format ="%Y-%m-%d %H:%M:%S")) %>%
   with_tz(tz = "America/Los_Angeles") %>%
   mutate(datetime = round_date(datetime, "5 mins"))
 
-# create matching column to line up data by site:
+# create matching column to line up metadata by site:
 ns_DO$Site <- paste(ns_DO$site, ns_DO$location, ns_DO$replicate, sep = "_")
 unique(ns_DO$Site)
 ns_DO$Site <- gsub("_3m_", "", ns_DO$Site)
+unique(ns_DO$Site)
 
 ##==========================
 ## Sensor offset
@@ -88,9 +96,11 @@ ns_DO_offset <- ns_DO %>%
     serial_miniDOT == "7450-710206" ~ 0.5485364,
     TRUE ~ (0.5485364))) # average offset value if the sensor was not found for calibration.
 
+# Create new column with re-calculated raw DO values.
 ns_DO_offset2 <- ns_DO_offset %>%
   mutate(Dissolved_Oxygen_offset = (Dissolved_O_mg_L + offset))
 
+# Check data distribution.
 hist(ns_DO_offset2$Dissolved_Oxygen_offset)
 
 # saveRDS(ns_DO_offset2, file = "./RawData/NS_miniDOT/24_DO_offset.rds")

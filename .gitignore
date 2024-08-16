@@ -50,3 +50,7 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Heili's data folders
+data_raw/
+data_working/
